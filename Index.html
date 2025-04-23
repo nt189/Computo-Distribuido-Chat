@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <link rel="stylesheet" href="Styles.css">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/5/w3.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+    <div id="navbar">
+        <div id="search-container">
+            <i class="fa fa-search"></i>
+            <input type="text" placeholder="Buscar...">
+        </div>
+        <div class="chat">
+            <img src="img/avatardefault.png" alt="Avatar">
+            <div class="chat-preview">
+                <div class="chat-header">
+                    <span class="chat-name">Username</span>
+                    <span class="chat-time">19:00</span>
+                </div>
+                <p class="chat-message">Último mensaje del usuario...</p>
+            </div>
+        </div>        
+    </div>
+
+    <div id="chat-container">
+        <div id="chat-info">
+            <label for="Username">Nombre de usuario:</label>
+            <input type="text" id="Username" placeholder="Nombre">
+        </div>
+
+        <div id="messages-content">
+            <div class="other-messages">
+                <p>hola</p>
+            </div>
+            <div class="my-messages">
+                <p>como estas</p>
+            </div>
+        </div>
+
+        <div id="messages-input">
+            <input type="text" placeholder="Escribe tu mensaje...">
+            <button>Enviar</button>
+        </div>
+    </div>
+
+    <script src="sockets.js"></script>
+</body>
+</html>
