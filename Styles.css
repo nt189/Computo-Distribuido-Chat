@@ -98,15 +98,39 @@ body {
 #chat-container {
     flex: 1; 
     display: flex;
-    flex-direction: column; 
+    flex-direction: column;
+    align-content: center;
 }
 
+
 #chat-info {
+    display: flex; 
+    align-items: center;
     background-color: #ffffff; 
     padding: 10px;
     border-bottom: 1px solid #ccc;
     height: 60px;
-    align-content: center;
+}
+
+#chat-info img {
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    margin-right: 10px; 
+}
+
+.chat-info-text {
+    display: flex; 
+    flex-direction: column; 
+}
+
+#chat-info-tile {
+    font-weight: bold; 
+}
+
+#chat-info-status {
+    font-size: 0.8em; 
+    color: #7f8c8d; 
 }
 
 #messages-content {
@@ -115,27 +139,38 @@ body {
     padding: 10px; 
     display: flex;
     flex-direction: column;
+    height: 80vh; 
 }
 
-.other-messages, .my-messages {
-    max-width: 70%;
+.message-container {
+    max-width: 70%; 
     padding: 10px;
     margin: 5px 0;
-    border-radius: 10px;
-    word-wrap: break-word;
-    display: inline-block;
+    border-radius: 10px; 
+    display: flex;
+    justify-content: space-between;
+    align-items: center; 
+    position: relative;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); 
 }
 
 .other-messages {
-    background-color: #ffffff;
-    color: #2c3e50;
-    align-self: flex-start;
+    background-color: #ffffff; 
+    color: #2c3e50; 
+    align-self: flex-start; 
 }
 
 .my-messages {
-    background-color: hsl(180, 94%, 94%);
-    align-self: flex-end;
-    margin-left: auto;
+    background-color: hsl(180, 94%, 94%); 
+    align-self: flex-end; 
+    margin-left: auto; 
+}
+
+.message-time {
+    font-size: 0.68em; 
+    color: #7f8c8d;
+    margin-top: 8px; 
+    margin-left: 5px; 
 }
 
 #messages-input {
