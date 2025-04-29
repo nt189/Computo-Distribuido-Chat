@@ -20,7 +20,6 @@ body {
     overflow-y: auto;
 }
 
-/* Estilo para el right-sidebar */
 #right-sidebar {
     width: 300px;
     background-color: #ffffff;
@@ -32,25 +31,22 @@ body {
     flex-direction: column;
     position: fixed;
     top: 0;
-    right: -300px; /* Oculto inicialmente fuera de la pantalla */
-    transition: right 0.3s ease-in-out; /* Transición suave */
+    right: -300px; 
+    transition: right 0.3s ease-in-out;
 }
 
-/* Mostrar el right-sidebar cuando está activo */
 #right-sidebar.active {
-    right: 0; /* Muestra el sidebar deslizándolo hacia la pantalla */
+    right: 0;
 }
 
-/* Estilo para el chat-container */
 #chat-container {
-    flex: 1; /* Permitir que el chat-container ocupe el espacio restante */
-    margin-right: 0; /* Margen inicial */
-    transition: margin-right 0.3s ease-in-out; /* Transición suave */
+    flex: 1; 
+    margin-right: 0; 
+    transition: margin-right 0.3s ease-in-out; 
 }
 
-/* Ajustar el margen del chat-container cuando el right-sidebar está activo */
 body.sidebar-active #chat-container {
-    margin-right: 300px; /* Ajustar el margen derecho del chat-container */
+    margin-right: 300px; 
 }
 
 #right-sidebar.hidden {
@@ -81,7 +77,6 @@ body.sidebar-active #chat-container {
     background-color: #f5f5f5;
 }
 
-/* Estilo para el botón de toggle */
 #toggle-sidebar {
     background-color: #3498db;
     color: white;
@@ -90,7 +85,7 @@ body.sidebar-active #chat-container {
     padding: 5px 10px;
     cursor: pointer;
     font-size: 1em;
-    margin-left: auto; /* Empuja el botón hacia la derecha */
+    margin-left: auto; 
 }
 
 #toggle-sidebar:hover {
@@ -190,16 +185,16 @@ body.sidebar-active #chat-container {
 }
 
 #chat-container {
-    flex: 1; /* Permitir que el chat-container ocupe el espacio restante */
-    transition: margin-right 0.3s ease-in-out; /* Transición suave */
+    flex: 1; 
+    transition: margin-right 0.3s ease-in-out; 
 }
 
-/* Cuando el right-sidebar está activo, ajusta el margen del chat-container */
+
 #right-sidebar.active ~ #chat-container {
-    margin-right: 300px; /* Ajustar el margen derecho del chat-container */
+    margin-right: 300px; 
 }
 
-/* Cuando el right-sidebar no está activo, el margen vuelve a 0 */
+
 #right-sidebar:not(.active) ~ #chat-container {
     margin-right: 0;
 }
