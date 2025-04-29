@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 <body>
-    <div id="navbar">
+    <div id="left-navbar">
         <div id="search-container">
             <i class="fa fa-search"></i>
             <input type="text" placeholder="Buscar...">
@@ -47,6 +47,7 @@
                 <span id="chat-info-tile">Chat Global</span>
                 <span id="chat-info-status">5 Usuarios conectados</span>
             </div>
+            <button id="toggle-sidebar" class="toggle-button">&lt;</button>
         </div>
         <div id="messages-content">
             <div class="message-container other-messages">
@@ -70,6 +71,31 @@
         </div>
     </div>
 
+    <div id="right-sidebar">
+        <button id="close-sidebar" class="close-button">&gt;</button>
+        <h3>Usuarios Conectados</h3>
+        <div class="chat" data-chatname="user1-chat">
+            <img src="img/avatardefault.png" alt="Avatar">
+            <div class="chat-preview">
+                <div class="chat-header">
+                    <span class="chat-name">User 1</span>
+                    <span class="Status" id="user1-last-time">En linea</span>
+                </div>
+            </div>
+        </div>
+        <h3>Usuarios Desconectados</h3>
+        <div class="chat" data-chatname="user1-chat">
+            <img src="img/avatardefault.png" alt="Avatar">
+            <div class="chat-preview">
+                <div class="chat-header">
+                    <span class="chat-name">User 1</span>
+                    <span class="Status" id="user2-last-time">Fuera de linea</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="sockets.js"></script>
+    <script src="Animations.js"></script>
 </body>
 </html>

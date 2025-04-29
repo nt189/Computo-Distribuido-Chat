@@ -8,9 +8,10 @@ body {
     height: 100vh;
     display: flex;
     font-family: Arial, sans-serif;
+    flex-direction: row;
 }
 
-#navbar {
+#left-navbar {
     width: 300px;
     background-color: #ffffff;
     padding: 15px;
@@ -19,10 +20,104 @@ body {
     overflow-y: auto;
 }
 
+/* Estilo para el right-sidebar */
+#right-sidebar {
+    width: 300px;
+    background-color: #ffffff;
+    padding: 15px;
+    border-left: 1px solid #ccc;
+    height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    right: -300px; /* Oculto inicialmente fuera de la pantalla */
+    transition: right 0.3s ease-in-out; /* Transición suave */
+}
+
+/* Mostrar el right-sidebar cuando está activo */
+#right-sidebar.active {
+    right: 0; /* Muestra el sidebar deslizándolo hacia la pantalla */
+}
+
+/* Estilo para el chat-container */
+#chat-container {
+    flex: 1; /* Permitir que el chat-container ocupe el espacio restante */
+    margin-right: 0; /* Margen inicial */
+    transition: margin-right 0.3s ease-in-out; /* Transición suave */
+}
+
+/* Ajustar el margen del chat-container cuando el right-sidebar está activo */
+body.sidebar-active #chat-container {
+    margin-right: 300px; /* Ajustar el margen derecho del chat-container */
+}
+
+#right-sidebar.hidden {
+    display: none;
+}
+
+#right-sidebar h3 {
+    margin: 0 0 10px;
+    font-size: 1.2em;
+    color: #333;
+}
+
+#right-sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#right-sidebar ul {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    color: #555;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+#right-sidebar ul:hover {
+    background-color: #f5f5f5;
+}
+
+/* Estilo para el botón de toggle */
+#toggle-sidebar {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 1em;
+    margin-left: auto; /* Empuja el botón hacia la derecha */
+}
+
+#toggle-sidebar:hover {
+    background-color: #2980b9;
+}
+
+#close-sidebar {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 1em;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+#close-sidebar:hover {
+    background-color: #c0392b;
+}
+
 #search-container {
     position: relative;
     width: 100%; 
-    margin-bottom: 15px; 
+    margin-bottom: 15px;
 }
 
 #search-container input {
@@ -94,14 +189,20 @@ body {
     text-overflow: ellipsis;
 }
 
-
 #chat-container {
-    flex: 1; 
-    display: flex;
-    flex-direction: column;
-    align-content: center;
+    flex: 1; /* Permitir que el chat-container ocupe el espacio restante */
+    transition: margin-right 0.3s ease-in-out; /* Transición suave */
 }
 
+/* Cuando el right-sidebar está activo, ajusta el margen del chat-container */
+#right-sidebar.active ~ #chat-container {
+    margin-right: 300px; /* Ajustar el margen derecho del chat-container */
+}
+
+/* Cuando el right-sidebar no está activo, el margen vuelve a 0 */
+#right-sidebar:not(.active) ~ #chat-container {
+    margin-right: 0;
+}
 
 #chat-info {
     display: flex; 
