@@ -2,6 +2,7 @@ import asyncio
 import websockets
 from xml.etree import ElementTree as ET
 import logging
+import Pyro4
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
