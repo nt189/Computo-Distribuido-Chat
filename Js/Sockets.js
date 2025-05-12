@@ -126,3 +126,18 @@ document.querySelector('#messages-input button').addEventListener('click', sendM
 document.querySelector('#messages-input input').addEventListener('keypress', function(e) {
     if (e.key === 'Enter') sendMessage();
 });
+
+// Selección de chat
+document.querySelectorAll('.chat').forEach(chatElement => {
+    chatElement.addEventListener('click', function() {
+        chat_selected = this.getAttribute('data-chatname'); // Cambia el valor de chat_selected
+        console.log(`Chat seleccionado: ${chat_selected}`); // Opcional: para depuración
+
+        // Actualizar el título del chat seleccionado
+        document.getElementById('chat-info-tile').textContent = this.querySelector('.chat-name').textContent;
+
+        // Actualizar la imagen del chat seleccionado
+        const chatImageSrc = this.querySelector('img').getAttribute('src'); // Obtener la ruta de la imagen del chat
+        document.querySelector('#chat-info img').setAttribute('src', chatImageSrc); // Cambiar la imagen en el contenedor
+    });
+});

@@ -41,7 +41,6 @@ class ChatServices:
                 <for>{case}</for>
                 <htmlmessage>
                     &lt;div class=&quot;message-container my-messages&quot;&gt;
-                        &lt;div class=&quot;sender-name&quot;&gt;{sender}&lt;/div&gt;
                         &lt;div class=&quot;message-content&quot;&gt;
                             &lt;span&gt;{message}&lt;/span&gt;
                             &lt;span class=&quot;message-time&quot;&gt;{time}&lt;/span&gt;
