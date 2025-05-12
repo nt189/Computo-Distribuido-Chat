@@ -86,16 +86,22 @@ async def globalChat(xmlReceived):
     xml_string = ET.tostring(xmlReceived, encoding='utf-8', method='xml').decode('utf-8')
     
     # Llamar al servicio Pyro4 con la cadena XML
-    response = chat_services.globalChat(xml_string)
+    response = chat_services.otherMessage(xml_string)
+    response1 = chat_services.myMessage(xml_string)
 
     for client in clients.values():
-        if client["websocket"] is not None:
+        if client["websocket"] is not None and client['username'] != xmlReceived.find("sender").text:
             try:
                 await client["websocket"].send(response)
             except websockets.ConnectionClosed:
                 client["status"] = "inactivo"
                 client["websocket"] = None
-                
+        else:
+            try:
+                await client["websocket"].send(response1)
+            except websockets.ConnectionClosed:
+                client["status"] = "inactivo"
+                client["websocket"] = None
 # -----------------------------------------------------------------------------------------
 
 async def handler(websocket):
