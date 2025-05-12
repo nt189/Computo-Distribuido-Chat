@@ -29,3 +29,11 @@ document.getElementById("close-sidebar").addEventListener("click", function () {
     // Mostrar el botón toggle-sidebar
     toggleButton.style.display = "block";
 });
+
+document.getElementById("toggle-left-navbar").addEventListener("click", function () {
+    const leftNavbar = document.getElementById("left-navbar");
+
+    // Alternar la clase 'active' en el left-navbar
+    leftNavbar.classList.toggle("active");
+});
+

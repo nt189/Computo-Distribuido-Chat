@@ -42,8 +42,8 @@ async def handler(websocket):
             del connected_clients[websocket]
 
 async def main():
-    async with websockets.serve(handler, "localhost", 12345):
-        logger.info("Servidor WebSocket escuchando en ws://localhost:12345")
+    async with websockets.serve(handler, "192.168.1.68", 12345): # Cambia la IP y el puerto según sea necesario
+        logger.info("Servidor WebSocket escuchando en ws://192.168.1.68:12345") 
         await asyncio.Future()  # Ejecutar indefinidamente
 
 if __name__ == "__main__":

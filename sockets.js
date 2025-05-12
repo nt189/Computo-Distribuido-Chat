@@ -3,7 +3,7 @@ let username = prompt("Ingresa tu nombre de usuario:") || "Anónimo";
 
 // Conectar al servidor
 function connectToServer() {
-    socket = new WebSocket('ws://localhost:12345');
+    socket = new WebSocket('ws://192.168.1.68:12345'); // Cambia la dirección IP y el puerto según tu configuración
 
     socket.onopen = function() {
         console.log('Conectado al servidor.');
