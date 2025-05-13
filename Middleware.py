@@ -115,8 +115,7 @@ async def logout(xmlRecived):
 
     return '<response><case>logout</case><status>ok</status></response>'
 
-async def globalChat(xmlReceived): #broadcast
-    # Convertir el objeto XML a una cadena de texto
+async def globalChat(xmlReceived):  # broadcast
     xml_string = ET.tostring(xmlReceived, encoding='utf-8', method='xml').decode('utf-8')
     
     # Llamar al servicio Pyro4 con la cadena XML
@@ -124,26 +123,15 @@ async def globalChat(xmlReceived): #broadcast
     response1 = chat_services.myMessage(xml_string)
 
     for client in clients.values():
-        if client["websocket"] is not None and client['username'] != xmlReceived.find("sender").text:
+        if client["websocket"] is not None:  
             try:
-                await client["websocket"].send(response)
+                if client['username'] != xmlReceived.find("sender").text:
+                    await client["websocket"].send(response)
+                else:
+                    await client["websocket"].send(response1)
             except websockets.ConnectionClosed:
-                client["status"] = "inactivo"
+                client["status"] = "Inactivo"
                 client["websocket"] = None
-        else:
-            try:
-                await client["websocket"].send(response1)
-            except websockets.ConnectionClosed:
-                client["status"] = "inactivo"
-                client["websocket"] = None
-
-async def privateChat(xmlReceived): # unicast
-    xml_string = ET.tostring(xmlReceived, encoding='utf-8', method='xml').decode('utf-8')
-    
-    # Llamar al servicio Pyro4 con la cadena XML
-    response = chat_services.otherMessage(xml_string)
-    response1 = chat_services.myMessage(xml_string)
-
 
 # -----------------------------------------------------------------------------------------
 
