@@ -1,40 +1,63 @@
-const webSocket = new WebSocket('ws://192.168.1.68:8888');
+let webSocket = new WebSocket('ws://192.168.1.68:8888');
 let user = {};
 let chat_selected = 'global-chat';
 
-// Cuando el WebSocket se abre 
-webSocket.onopen = function (event) {
-    console.log('WebSocket conectado');
+import { updateConnectedUsers, updateDisconnectedUsers } from './UserListManager.js';
 
-    if (localStorage.getItem('user')) {
-        user = JSON.parse(localStorage.getItem('user'));
-        messageXML = `
-            <message>
-                <case>login</case>
-                <userid>${user.userid}</userid>
-                <username>${user.username}</username>
-            </message>`;
-        webSocket.send(messageXML);
-    } 
-    else {
-        let username = null;
-        while (!username || username.trim() === '') {
-            username = prompt('Elige un nombre de usuario');
-            if (username && username.trim() !== '') {
-                messageXML = `
-                    <message>
-                        <case>register</case>
-                        <username>${username.trim()}</username>
-                    </message>`;
-                webSocket.send(messageXML);
-            } 
-            else {
-                alert('El nombre de usuario no puede estar vacío');
-                username = null;
+// Cuando el WebSocket se abre 
+function initializeWebSocket() {
+    webSocket = new WebSocket('ws://192.168.1.68:8888'); // Crea una nueva instancia
+
+    webSocket.onopen = function (event) {
+        console.log('WebSocket conectado');
+        reconnectAttempts = 0; // Reinicia el contador de intentos de reconexión
+        let messageXML;
+
+        if (localStorage.getItem('user')) {
+            user = JSON.parse(localStorage.getItem('user'));
+            messageXML = `
+                <message>
+                    <case>login</case>
+                    <userid>${user.userid}</userid>
+                    <username>${user.username}</username>
+                </message>`;
+            webSocket.send(messageXML);
+        } 
+        else {
+            let username = null;
+            while (!username || username.trim() === '') {
+                username = prompt('Elige un nombre de usuario');
+                if (username && username.trim() !== '') {
+                    messageXML = `
+                        <message>
+                            <case>register</case>
+                            <username>${username.trim()}</username>
+                        </message>`;
+                    webSocket.send(messageXML);
+                } else {
+                    alert('El nombre de usuario no puede estar vacío');
+                    username = null;
+                }
             }
         }
+    };
+}
+initializeWebSocket();
+
+let reconnectAttempts = 0;
+const maxReconnectAttempts = 10;
+
+function attemptReconnect() {
+    if (reconnectAttempts < maxReconnectAttempts) {
+        reconnectAttempts++;
+        console.log(`Intentando reconectar (${reconnectAttempts}/${maxReconnectAttempts})...`);
+        setTimeout(() => {
+            initializeWebSocket(); // Reintenta inicializar el WebSocket
+        }, 5000); // Espera 5 segundos antes de intentar reconectar
+    } else {
+        console.error('Se alcanzó el número máximo de intentos de reconexión.');
     }
-};
+}
 
 // Cuando se recibe un mensaje del servidor
 webSocket.onmessage = function (event) {
@@ -78,6 +101,23 @@ webSocket.onmessage = function (event) {
         case 'error':
             handleError(xmlDoc);
             break;
+        case 'updateUsers':
+            const connectedUsers = Array.from(xmlDoc.getElementsByTagName("connectedUser")).map(user => ({
+                name: user.getAttribute('name'),
+                chatname: user.getAttribute('chatname'),
+                avatar: user.getAttribute('avatar'),
+                totalUsers: user.getAttribute('totalUsers')
+            }));
+
+            const disconnectedUsers = Array.from(xmlDoc.getElementsByTagName("disconnectedUser")).map(user => ({
+                name: user.getAttribute('name'),
+                chatname: user.getAttribute('chatname'),
+                avatar: user.getAttribute('avatar')
+            }));
+
+            updateConnectedUsers(connectedUsers);
+            updateDisconnectedUsers(disconnectedUsers);
+        break;
 
         default:
             console.warn("Caso no reconocido:", caseElement.textContent);
@@ -98,7 +138,8 @@ function sendMessage() {
             </message>`;
         webSocket.send(messageXML);
         messageInput.value = '';
-    } else {
+    } 
+    else {
         alert('El mensaje no puede estar vacío');
     }
 }
@@ -110,7 +151,7 @@ webSocket.onerror = function(error) {
 
 webSocket.onclose = function(event) {
     console.log('Conexión cerrada:', event);
-    // Opcional: intentar reconectar
+    attemptReconnect(); // Intentar reconectar
 };
 
 // Selección de chat
@@ -140,4 +181,17 @@ document.querySelectorAll('.chat').forEach(chatElement => {
         const chatImageSrc = this.querySelector('img').getAttribute('src'); // Obtener la ruta de la imagen del chat
         document.querySelector('#chat-info img').setAttribute('src', chatImageSrc); // Cambiar la imagen en el contenedor
     });
+});
+
+window.addEventListener('beforeunload', function () {
+    if (webSocket && webSocket.readyState === WebSocket.OPEN) {
+        webSocket.send(`
+            <message>
+                <case>logout</case>
+                <userId>${user.userid}</userId>
+                <username>${user.username}</username>
+            </message>`); // Envía un mensaje de cierre al servidor
+        webSocket.close(); // Cierra la conexión WebSocket
+        console.log('WebSocket cerrado antes de salir de la página.');
+    }
 });

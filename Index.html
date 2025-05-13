@@ -83,29 +83,34 @@
 
     <div id="right-sidebar">
         <button id="close-sidebar" class="close-button">&gt;</button>
-        <h3>Usuarios Conectados</h3>
-        <div class="chat" data-chatname="user1-chat">
-            <img src="img/avatardefault.png" alt="Avatar">
-            <div class="chat-preview">
-                <div class="chat-header">
-                    <span class="chat-name">User 1</span>
-                    <span class="Status" id="user1-last-time">En linea</span>
+        <div id="onlineUsers">
+            <h3>Usuarios Conectados</h3>
+            <div class="chat" data-chatname="user1-chat">
+                <img src="img/avatardefault.png" alt="Avatar">
+                <div class="chat-preview">
+                    <div class="chat-header">
+                        <span class="chat-name">User 1</span>
+                        <span class="Status" id="user1-last-time">Activo</span>
+                    </div>
                 </div>
             </div>
         </div>
-        <h3>Usuarios Desconectados</h3>
-        <div class="chat" data-chatname="user1-chat">
-            <img src="img/avatardefault.png" alt="Avatar">
-            <div class="chat-preview">
-                <div class="chat-header">
-                    <span class="chat-name">User 2</span>
-                    <span class="Status" id="user2-last-time">Fuera de linea</span>
+        <div id="offLineUsers">
+            <h3>Usuarios Desconectados</h3>
+            <div class="chat" data-chatname="user1-chat">
+                <img src="img/avatardefault.png" alt="Avatar">
+                <div class="chat-preview">
+                    <div class="chat-header">
+                        <span class="chat-name">User 2</span>
+                        <span class="Status" id="user2-last-time">Inactivo</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="Js/Sockets.js"></script>
+    <script src="Js/Sockets.js" type="module"></script>
+    <script src="Js/UserListManager.js" type="module"></script>
     <script src="Js/Animations.js"></script>
 </body>
 </html>
