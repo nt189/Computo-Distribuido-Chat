@@ -93,9 +93,15 @@ webSocket.onmessage = function (event) {
             break;
 
         case 'message':
-            let forchat = xmlDoc.getElementsByTagName("for")[0];
-            let messagehtml = xmlDoc.getElementsByTagName("htmlmessage")[0];
-            document.getElementById('messages-content').innerHTML += messagehtml.textContent;
+            let forchat = xmlDoc.getElementsByTagName("for")[0].textContent;
+            let messagehtml;
+            if (forchat == 'global-chat'){
+                messagehtml = xmlDoc.getElementsByTagName("htmlmessage")[0];
+                if (messagehtml) {
+                    document.getElementById('messages-content').innerHTML += messagehtml.textContent;
+                    localStorage.setItem('globalChatHistory', document.getElementById('messages-content').innerHTML);
+                }
+            }
             break;
 
         case 'error':
@@ -129,20 +135,33 @@ function sendMessage() {
     const message = messageInput.value.trim();
 
     if (message) {
-        const messageXML = `
-            <message>
-                <case>${chat_selected}</case>
-                <sender>${user.username}</sender>
-                <textmessage>${message}</textmessage>
-                <time>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time>
-            </message>`;
+        let messageXML;
+        if (chat_selected === 'global-chat') {
+            messageXML = `
+                <message>
+                    <case>global-chat</case>
+                    <sender>${user.username}</sender>
+                    <textmessage>${message}</textmessage>
+                    <time>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time>
+                </message>`;
+        } else {
+            // chat_selected debe ser el userid del usuario destino
+            messageXML = `
+                <message>
+                    <case>private-chat</case>
+                    <sender>${user.username}</sender>
+                    <to>${chat_selected}</to>
+                    <textmessage>${message}</textmessage>
+                    <time>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time>
+                </message>`;
+        }
         webSocket.send(messageXML);
         messageInput.value = '';
-    } 
-    else {
+    } else {
         alert('El mensaje no puede estar vacío');
     }
 }
+
 
 // Añade manejadores de errores
 webSocket.onerror = function(error) {
@@ -195,3 +214,35 @@ window.addEventListener('beforeunload', function () {
         console.log('WebSocket cerrado antes de salir de la página.');
     }
 });
+
+
+function globalchatload() {
+    const globalChatHistory = localStorage.getItem('globalChatHistory');
+    if (globalChatHistory) {
+        document.getElementById('messages-content').innerHTML = globalChatHistory;
+    }
+};
+globalchatload()
+
+// Función para actualizar la info del chat con los datos de un usuario seleccionado
+function updateChatInfoWithUser(userElement) {
+    const userName = userElement.getAttribute('data-name');
+    const userAvatar = userElement.getAttribute('data-avatar');
+    document.getElementById('chat-info-tile').textContent = userName;
+    document.querySelector('#chat-info img').setAttribute('src', userAvatar);
+}
+
+// Añade event listeners a los usuarios activos (llama esto después de actualizar la lista de usuarios)
+function addActiveUserClickListeners() {
+    document.querySelectorAll('.connected-user').forEach(userElement => {
+        userElement.addEventListener('click', function() {
+            updateChatInfoWithUser(this);
+        });
+    });
+}
+
+// Llama a esta función cada vez que actualices la lista de usuarios conectados
+// Por ejemplo, después de updateConnectedUsers(connectedUsers);
+window.addEventListener('DOMContentLoaded', addActiveUserClickListeners);
+
+// Si updateConnectedUsers reemplaza el HTML, llama a addActiveUserClickListeners() al final de esa función.

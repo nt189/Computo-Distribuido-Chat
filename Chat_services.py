@@ -51,6 +51,32 @@ class ChatServices:
             '''
 
         return template
+    def createchat(self, xmlRecived):
+        xmlRecived = ET.fromstring(xmlRecived)
+        sender = xmlRecived.find("sender").text
+        message = xmlRecived.find("textmessage").text
+        time = xmlRecived.find("time").text
+        case = xmlRecived.find("case").text
+        
+        template = f'''
+            <response>
+                <case>message</case>
+                <for>{case}</for>
+                <htmlnewchat>
+                    &lt;div class="chat" data-chatname="private-chat"&gt;
+                        &lt;img src="img/avatardefault.png" alt="Avatar"&gt;
+                        &lt;div class="chat-preview"&gt;
+                            &lt;div class="chat-header"&gt;
+                                &lt;span class="chat-name"&gt;{sender}&lt;/span&gt;
+                                &lt;span class="chat-time" id="{sender}-last-time"&gt;{time}&lt;/span&gt;
+                            &lt;/div&gt;
+                            &lt;p class="chat-message" id="user1-premessage"&gt;{message[:12]+'...'}&lt;/p&gt;
+                        &lt;/div&gt;
+                    &lt;/div&gt;
+                </htmlnewchat>
+        '''
+
+        return template
 
 # Registrar el servicio
 daemon = Pyro4.Daemon()
