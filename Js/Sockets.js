@@ -1,4 +1,4 @@
-let webSocket = new WebSocket('ws://192.168.1.68:8888');
+let webSocket;
 let user = {};
 let chat_selected = 'global-chat';
 
@@ -6,11 +6,11 @@ import { updateConnectedUsers, updateDisconnectedUsers } from './UserListManager
 
 // Cuando el WebSocket se abre 
 function initializeWebSocket() {
-    webSocket = new WebSocket('ws://192.168.1.68:8888'); // Crea una nueva instancia
+    webSocket = new WebSocket('ws://192.168.1.68:8888'); 
 
     webSocket.onopen = function (event) {
         console.log('WebSocket conectado');
-        reconnectAttempts = 0; // Reinicia el contador de intentos de reconexión
+        reconnectAttempts = 0; 
         let messageXML;
 
         if (localStorage.getItem('user')) {
@@ -22,6 +22,7 @@ function initializeWebSocket() {
                     <username>${user.username}</username>
                 </message>`;
             webSocket.send(messageXML);
+            document.getElementById('whoami').innerHTML = user.username;
         } 
         else {
             let username = null;
@@ -34,6 +35,7 @@ function initializeWebSocket() {
                             <username>${username.trim()}</username>
                         </message>`;
                     webSocket.send(messageXML);
+                    document.getElementById('whoami').innerHTML = user.username;
                 } else {
                     alert('El nombre de usuario no puede estar vacío');
                     username = null;
@@ -177,7 +179,6 @@ webSocket.onclose = function(event) {
 document.querySelectorAll('.chat').forEach(chatElement => {
     chatElement.addEventListener('click', function() {
         chat_selected = this.getAttribute('data-chatname');
-        // Actualizar la interfaz para mostrar el chat seleccionado
     });
 });
 
@@ -241,8 +242,4 @@ function addActiveUserClickListeners() {
     });
 }
 
-// Llama a esta función cada vez que actualices la lista de usuarios conectados
-// Por ejemplo, después de updateConnectedUsers(connectedUsers);
 window.addEventListener('DOMContentLoaded', addActiveUserClickListeners);
-
-// Si updateConnectedUsers reemplaza el HTML, llama a addActiveUserClickListeners() al final de esa función.

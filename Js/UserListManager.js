@@ -2,7 +2,7 @@
 function updateConnectedUsers(users) {
     const onlineUsersContainer = document.querySelector('#onlineUsers');
     const chat_info_status = document.getElementById('chat-info-status');
-    onlineUsersContainer.innerHTML = '<h3>Usuarios Conectados</h3>'; // Reinicia la lista
+    onlineUsersContainer.innerHTML = '<h6 style="font-weight: bold;">Usuarios Conectados</h6>'; // Reinicia la lista
 
     if (users.length === 1) {
         chat_info_status.textContent  = `${users.length} Usuario Conectado`; 
@@ -12,27 +12,28 @@ function updateConnectedUsers(users) {
     
     users.forEach(user => {
         const userElement = document.createElement('div');
-        userElement.classList.add('chat', 'connected-user'); // Añade la clase connected-user
+        userElement.classList.add('chat', 'connected-user');
         userElement.setAttribute('data-chatname', user.chatname);
-        userElement.setAttribute('data-name', user.name); // Añade data-name
-        userElement.setAttribute('data-avatar', user.avatar || 'img/avatardefault.png'); // Añade data-avatar
+        userElement.setAttribute('data-name', user.name);
+        userElement.setAttribute('data-avatar', user.avatar || 'img/avatardefault.png');
 
         userElement.innerHTML = `
             <img src="${user.avatar || 'img/avatardefault.png'}" alt="Avatar">
             <div class="chat-preview">
                 <div class="chat-header">
                     <span class="chat-name">${user.name}</span>
-                    <span class="Status">Activo</span>
+                    <span class="chat-time">${user.lastTime || ''}</span>
+                </div>
+                <div class="chat-header">
+                    <span class="chat-message">${user.lastMessage || ''}</span>
+                    <span class="Status" style="color: green;">•</span>
                 </div>
             </div>
         `;
 
-        // Añade el event listener para actualizar el chat-info
         userElement.addEventListener('click', function() {
-            // Actualiza el título y la imagen del chat-info
             document.getElementById('chat-info-tile').textContent = user.name;
             document.querySelector('#chat-info img').setAttribute('src', user.avatar || 'img/avatardefault.png');
-            // Borra los mensajes del área messages-content
             document.getElementById('messages-content').innerHTML = '';
         });
 
@@ -40,11 +41,10 @@ function updateConnectedUsers(users) {
     });
 }
 
-
 // Función para actualizar la lista de usuarios desconectados
 function updateDisconnectedUsers(users) {
     const offlineUsersContainer = document.querySelector('#offLineUsers');
-    offlineUsersContainer.innerHTML = '<h3>Usuarios Desconectados</h3>'; // Reinicia la lista
+    offlineUsersContainer.innerHTML = '<h6 style="font-weight: bold;">Usuarios desconectados</h6>'; // Reinicia la lista
 
     users.forEach(user => {
         const userElement = document.createElement('div');
@@ -56,7 +56,11 @@ function updateDisconnectedUsers(users) {
             <div class="chat-preview">
                 <div class="chat-header">
                     <span class="chat-name">${user.name}</span>
-                    <span class="Status">Inactivo</span>
+                    <span class="chat-time">${user.lastTime || ''}</span>
+                </div>
+                <div class="chat-header">
+                    <span class="chat-message">${user.lastMessage || ''}</span>
+                    <span class="Status" style="color: red;">•</span>
                 </div>
             </div>
         `;
@@ -65,4 +69,4 @@ function updateDisconnectedUsers(users) {
 }
 
 // Exportar las funciones
-export { updateConnectedUsers, updateDisconnectedUsers };   
+export { updateConnectedUsers, updateDisconnectedUsers };

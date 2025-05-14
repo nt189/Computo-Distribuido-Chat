@@ -13,51 +13,51 @@
         <div id="search-container">
             <i class="fa fa-search"></i>
             <input type="text" placeholder="Buscar...">
-        </div>
-
-        <div class="chat" data-chatname="global-chat">
-            <img src="img/globalicon.png" alt="Avatar">
-            <div class="chat-preview">
-                <div class="chat-header">
-                    <span class="chat-name">Chat Global</span>
-                    <span class="chat-time" id="global-last-time">00:00</span>
-                </div>
-                <p class="chat-message" id="glast-premessage">Yo: Como estas</p>
-            </div>
         </div>      
-        
-        <div class="chat" data-chatname="user1-chat">
+
+        <div id="onlineUsers">
+            <h6 style="font-weight: bold;">Usuarios Conectados</h6>
+            <div class="chat" data-chatname="user1">
             <img src="img/avatardefault.png" alt="Avatar">
             <div class="chat-preview">
                 <div class="chat-header">
                     <span class="chat-name">User 1</span>
                     <span class="chat-time" id="user1-last-time">19:00</span>
                 </div>
-                <p class="chat-message" id="user1-premessage">Buenos dias</p>
+                <div class="chat-header">
+                    <span class="chat-message" id="user1-premessage">Buenos dias</span>
+                    <span class="Status" style="color: green;">•</span>
+                </div>
             </div>
         </div>
-
-        <div class="chat" data-chatname="grupal-chat1">
-            <img src="img/grupalchat.png" alt="Avatar">
+        </div>
+        <div id="offLineUsers">
+            <h6 style="font-weight: bold;">Usuarios desconectados</h6>
+            <div class="chat" data-chatname="user2">
+            <img src="img/avatardefault.png" alt="Avatar">
             <div class="chat-preview">
                 <div class="chat-header">
-                    <span class="chat-name">Chat grupal</span>
+                    <span class="chat-name">User 2</span>
                     <span class="chat-time" id="user1-last-time">19:00</span>
                 </div>
-                <p class="chat-message" id="user1-premessage">Buenos dias</p>
+                <div class="chat-header">
+                    <span class="chat-message" id="user1-premessage">Buenos dias</span>
+                    <span class="Status" style="color: red;">•</span>
+                </div>
             </div>
         </div>
+        </div>
+
     </div>
 
     <div id="chat-container">
         <div id="chat-info">
             <button id="toggle-left-navbar">☰</button>
-            <img src="img/globalicon.png" alt="Avatar">
+            <img src="img/Recepción_de_mensajes.png" alt="Avatar">
             <div class="chat-info-text">
-                <span id="chat-info-tile">Chat Global</span>
+                <span id="chat-info-tile">Recepcion de mensajes</span>
                 <span id="chat-info-status">5 Usuarios conectados</span>
             </div>
-            <button id="toggle-sidebar" class="toggle-button">&lt;</button>
         </div>
         <div id="messages-content">
             <div class="message-container other-messages">
@@ -76,36 +76,12 @@
         </div>
 
         <div id="messages-input">
+            <label for="text">
+                <img src="img/avatardefault.png" alt="Avatar">
+                <span id="whoami">nickname</span>
+            </label>
             <input type="text" placeholder="Escribe tu mensaje...">
             <button>Enviar</button>
-        </div>
-    </div>
-
-    <div id="right-sidebar">
-        <button id="close-sidebar" class="close-button">&gt;</button>
-        <div id="onlineUsers">
-            <h3>Usuarios Conectados</h3>
-            <div class="chat" data-chatname="user1-chat">
-                <img src="img/avatardefault.png" alt="Avatar">
-                <div class="chat-preview">
-                    <div class="chat-header">
-                        <span class="chat-name">User 1</span>
-                        <span class="Status" id="user1-last-time">Activo</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div id="offLineUsers">
-            <h3>Usuarios Desconectados</h3>
-            <div class="chat" data-chatname="user1-chat">
-                <img src="img/avatardefault.png" alt="Avatar">
-                <div class="chat-preview">
-                    <div class="chat-header">
-                        <span class="chat-name">User 2</span>
-                        <span class="Status" id="user2-last-time">Inactivo</span>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 

@@ -45,6 +45,9 @@ def load_clients():
     try:
         with open("clients.json", "r") as f:
             data = json.load(f)
+            if not data:
+                print("El archivo clients.json está vacío, se iniciará una lista vacía.")
+                return
             for user_id, info in data.items():
                 clients[user_id] = {
                     "username": info["username"],
@@ -53,6 +56,8 @@ def load_clients():
                 }
     except FileNotFoundError:
         print("Archivo clients.json no encontrado, se iniciará una lista vacía.")
+    except json.JSONDecodeError:
+        print("El archivo clients.json no contiene datos válidos, se iniciará una lista vacía.")
 
 chat_services = Pyro4.Proxy("PYRONAME:chat.service")
 
