@@ -1,8 +1,8 @@
 let webSocket;
 let user = {};
-let chat_selected = 'global-chat';
+let diffMethod = 'broadcast';
+let selectedUsers = [];
 
-import { updateConnectedUsers, updateDisconnectedUsers } from './UserListManager.js';
 
 // Cuando el WebSocket se abre 
 function initializeWebSocket() {
@@ -68,7 +68,8 @@ webSocket.onmessage = function (event) {
 
     try {
         xmlDoc = parser.parseFromString(event.data, "text/xml");
-    } catch (e) {
+    } 
+    catch (e) {
         console.error("Error al analizar el XML:", e);
         return;
     }
@@ -95,15 +96,14 @@ webSocket.onmessage = function (event) {
             break;
 
         case 'message':
-            let forchat = xmlDoc.getElementsByTagName("for")[0].textContent;
             let messagehtml;
-            if (forchat == 'global-chat'){
-                messagehtml = xmlDoc.getElementsByTagName("htmlmessage")[0];
-                if (messagehtml) {
-                    document.getElementById('messages-content').innerHTML += messagehtml.textContent;
-                    localStorage.setItem('globalChatHistory', document.getElementById('messages-content').innerHTML);
-                }
+
+            messagehtml = xmlDoc.getElementsByTagName("htmlmessage")[0];
+            if (messagehtml) {
+                document.getElementById('messages-content').innerHTML += messagehtml.textContent;
+                localStorage.setItem('globalChatHistory', document.getElementById('messages-content').innerHTML);
             }
+
             break;
 
         case 'error':
@@ -132,38 +132,116 @@ webSocket.onmessage = function (event) {
     }
 };
 
+// Función para actualizar el botón y el método de envío
+function updateSendButtonAndMethod() {
+    const sendButton = document.querySelector('#messages-input button');
+    if (selectedUsers.length === 0) {
+        diffMethod = 'broadcast';
+        sendButton.textContent = 'Enviar a todos';
+    } else if (selectedUsers.length === 1) {
+        diffMethod = selectedUsers[0].dataset.chatname;
+        sendButton.textContent = `Enviar a ${selectedUsers[0].querySelector('.chat-name').textContent}`;
+    } else if (selectedUsers.length > 1) {
+        diffMethod = selectedUsers.map(u => u.dataset.chatname).join(',');
+        sendButton.textContent = `Enviar a ${selectedUsers.length}`;
+    }
+}
+
+// Función para manejar la selección visual y lógica
+function handleUserSelection(event) {
+    const userDiv = event.currentTarget;
+    if (event.ctrlKey) {
+        // Selección múltiple con Ctrl
+        if (selectedUsers.includes(userDiv)) {
+            userDiv.classList.remove('selected-user');
+            selectedUsers = selectedUsers.filter(u => u !== userDiv);
+        } else {
+            userDiv.classList.add('selected-user');
+            selectedUsers.push(userDiv);
+        }
+    } else {
+        // Si ya está seleccionado y hay más de uno, solo lo deselecciona
+        if (selectedUsers.length > 1 && selectedUsers.includes(userDiv)) {
+            userDiv.classList.remove('selected-user');
+            selectedUsers = selectedUsers.filter(u => u !== userDiv);
+        } else {
+            // Selección simple (solo uno)
+            document.querySelectorAll('.connected-user.selected-user').forEach(div => div.classList.remove('selected-user'));
+            selectedUsers = [];
+            userDiv.classList.add('selected-user');
+            selectedUsers.push(userDiv);
+        }
+    }
+    updateSendButtonAndMethod();
+}
+
+
+// Añadir listeners después de actualizar la lista de usuarios conectados
+import { updateConnectedUsers as originalUpdateConnectedUsers, updateDisconnectedUsers } from './UserListManager.js';
+
+function updateConnectedUsers(users) {
+    originalUpdateConnectedUsers(users);
+    // Añadir listeners a los usuarios conectados
+    document.querySelectorAll('.connected-user').forEach(div => {
+        div.addEventListener('click', handleUserSelection);
+    });
+    // Limpiar selección si los usuarios cambian
+    selectedUsers = [];
+    updateSendButtonAndMethod();
+}
+
+// Sobrescribe la importación
+export { updateConnectedUsers, updateDisconnectedUsers };
+
+// Modifica sendMessage para soportar unicast/multicast
 function sendMessage() {
     const messageInput = document.getElementById('messages-input').querySelector('input');
     const message = messageInput.value.trim();
 
     if (message) {
         let messageXML;
-        if (chat_selected === 'global-chat') {
+        if (selectedUsers.length === 0) {
+            // Broadcast
             messageXML = `
                 <message>
-                    <case>global-chat</case>
+                    <case>broadcast</case>
                     <sender>${user.username}</sender>
                     <textmessage>${message}</textmessage>
                     <time>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time>
                 </message>`;
-        } else {
-            // chat_selected debe ser el userid del usuario destino
+        } else if (selectedUsers.length === 1) {
+            // Unicast
             messageXML = `
                 <message>
-                    <case>private-chat</case>
+                    <case>unicast</case>
                     <sender>${user.username}</sender>
-                    <to>${chat_selected}</to>
+                    <addressee>${selectedUsers[0].dataset.chatname}</addressee>
+                    <textmessage>${message}</textmessage>
+                    <time>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time>
+                </message>`;
+        } else {
+            // Multicast
+            messageXML = `
+                <message>
+                    <case>multicast</case>
+                    <sender>${user.username}</sender>
+                    <addressee>${selectedUsers.map(u => u.dataset.chatname).join(',')}</addressee>
                     <textmessage>${message}</textmessage>
                     <time>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time>
                 </message>`;
         }
         webSocket.send(messageXML);
+        console.log(messageXML)
         messageInput.value = '';
+
+        // Deseleccionar usuarios después de enviar
+        document.querySelectorAll('.connected-user.selected-user').forEach(div => div.classList.remove('selected-user'));
+        selectedUsers = [];
+        updateSendButtonAndMethod();
     } else {
         alert('El mensaje no puede estar vacío');
     }
 }
-
 
 // Añade manejadores de errores
 webSocket.onerror = function(error) {
@@ -172,35 +250,13 @@ webSocket.onerror = function(error) {
 
 webSocket.onclose = function(event) {
     console.log('Conexión cerrada:', event);
-    attemptReconnect(); // Intentar reconectar
+    attemptReconnect(); 
 };
-
-// Selección de chat
-document.querySelectorAll('.chat').forEach(chatElement => {
-    chatElement.addEventListener('click', function() {
-        chat_selected = this.getAttribute('data-chatname');
-    });
-});
 
 // Conectar botón de enviar
 document.querySelector('#messages-input button').addEventListener('click', sendMessage);
 document.querySelector('#messages-input input').addEventListener('keypress', function(e) {
     if (e.key === 'Enter') sendMessage();
-});
-
-// Selección de chat
-document.querySelectorAll('.chat').forEach(chatElement => {
-    chatElement.addEventListener('click', function() {
-        chat_selected = this.getAttribute('data-chatname'); // Cambia el valor de chat_selected
-        console.log(`Chat seleccionado: ${chat_selected}`); // Opcional: para depuración
-
-        // Actualizar el título del chat seleccionado
-        document.getElementById('chat-info-tile').textContent = this.querySelector('.chat-name').textContent;
-
-        // Actualizar la imagen del chat seleccionado
-        const chatImageSrc = this.querySelector('img').getAttribute('src'); // Obtener la ruta de la imagen del chat
-        document.querySelector('#chat-info img').setAttribute('src', chatImageSrc); // Cambiar la imagen en el contenedor
-    });
 });
 
 window.addEventListener('beforeunload', function () {
@@ -210,12 +266,11 @@ window.addEventListener('beforeunload', function () {
                 <case>logout</case>
                 <userId>${user.userid}</userId>
                 <username>${user.username}</username>
-            </message>`); // Envía un mensaje de cierre al servidor
-        webSocket.close(); // Cierra la conexión WebSocket
+            </message>`); 
+        webSocket.close();
         console.log('WebSocket cerrado antes de salir de la página.');
     }
 });
-
 
 function globalchatload() {
     const globalChatHistory = localStorage.getItem('globalChatHistory');
@@ -224,22 +279,3 @@ function globalchatload() {
     }
 };
 globalchatload()
-
-// Función para actualizar la info del chat con los datos de un usuario seleccionado
-function updateChatInfoWithUser(userElement) {
-    const userName = userElement.getAttribute('data-name');
-    const userAvatar = userElement.getAttribute('data-avatar');
-    document.getElementById('chat-info-tile').textContent = userName;
-    document.querySelector('#chat-info img').setAttribute('src', userAvatar);
-}
-
-// Añade event listeners a los usuarios activos (llama esto después de actualizar la lista de usuarios)
-function addActiveUserClickListeners() {
-    document.querySelectorAll('.connected-user').forEach(userElement => {
-        userElement.addEventListener('click', function() {
-            updateChatInfoWithUser(this);
-        });
-    });
-}
-
-window.addEventListener('DOMContentLoaded', addActiveUserClickListeners);

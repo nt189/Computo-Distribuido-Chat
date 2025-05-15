@@ -91,6 +91,10 @@ body.sidebar-active #chat-container {
     color: #888; 
 }
 
+.connected-user.selected-user {
+    background-color: #cce4ff !important;
+}
+
 .chat {
     display: flex;
     align-items: center;
@@ -218,6 +222,12 @@ body.sidebar-active #chat-container {
     background-color: hsl(180, 94%, 94%); 
     align-self: flex-end; 
     margin-left: auto; 
+}
+
+.method-tag {
+    font-size: 0.8em;
+    color: #0074d9;
+    margin-left: 8px;
 }
 
 .message-time {

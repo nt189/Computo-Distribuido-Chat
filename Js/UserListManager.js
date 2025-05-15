@@ -12,7 +12,7 @@ function updateConnectedUsers(users) {
     
     users.forEach(user => {
         const userElement = document.createElement('div');
-        userElement.classList.add('chat', 'connected-user');
+        userElement.classList.add('chat', 'selectable-user', 'connected-user');
         userElement.setAttribute('data-chatname', user.chatname);
         userElement.setAttribute('data-name', user.name);
         userElement.setAttribute('data-avatar', user.avatar || 'img/avatardefault.png');
@@ -30,12 +30,6 @@ function updateConnectedUsers(users) {
                 </div>
             </div>
         `;
-
-        userElement.addEventListener('click', function() {
-            document.getElementById('chat-info-tile').textContent = user.name;
-            document.querySelector('#chat-info img').setAttribute('src', user.avatar || 'img/avatardefault.png');
-            document.getElementById('messages-content').innerHTML = '';
-        });
 
         onlineUsersContainer.appendChild(userElement);
     });

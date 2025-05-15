@@ -4,6 +4,14 @@ from xml.etree import ElementTree as ET
 import Pyro4
 import json
 
+#----------------------------- Conexion con objetos remotos Pyro4 -------------------------
+chat_services = Pyro4.Proxy("PYRONAME:chat.service")
+
+if chat_services.conection():
+    print("conexion establecida con los objetos remotos")
+else:
+    print("No se pudo establecer una conexion con los objetos remotos")
+
 # Diccionario de clientes (userId: {username, status, websocket})
 clients = {}
 
@@ -59,7 +67,7 @@ def load_clients():
     except json.JSONDecodeError:
         print("El archivo clients.json no contiene datos válidos, se iniciará una lista vacía.")
 
-chat_services = Pyro4.Proxy("PYRONAME:chat.service")
+# ---------------------------- Funciones -------------------------------
 
 async def login(xmlRecived, websocket):
     userid = xmlRecived.find("userid").text
@@ -120,7 +128,7 @@ async def logout(xmlRecived):
 
     return '<response><case>logout</case><status>ok</status></response>'
 
-async def globalChat(xmlReceived):  # broadcast
+async def broadcast(xmlReceived):  # broadcast
     xml_string = ET.tostring(xmlReceived, encoding='utf-8', method='xml').decode('utf-8')
     
     # Llamar al servicio Pyro4 con la cadena XML
@@ -138,6 +146,43 @@ async def globalChat(xmlReceived):  # broadcast
                 client["status"] = "Inactivo"
                 client["websocket"] = None
 
+async def multicast(xmlReceived):
+    xml_string = ET.tostring(xmlReceived, encoding='utf-8', method='xml').decode('utf-8')
+    addressees = xmlReceived.find("addressee").text
+    addressees = [a.strip() for a in addressees.split(',') if a.strip()]  # Limpia espacios y vacíos
+
+    # Llamar al servicio Pyro4 con la cadena XML
+    response = chat_services.otherMessage(xml_string)
+    response1 = chat_services.myMessage(xml_string)
+    sender = xmlReceived.find("sender").text
+
+    for user_id in addressees:
+        client = clients.get(user_id)
+        if client and client["websocket"] is not None:
+            try:
+                if client['username'] != sender:
+                    await client["websocket"].send(response)
+                else:
+                    await client["websocket"].send(response1)
+            except websockets.ConnectionClosed:
+                client["status"] = "Inactivo"
+                client["websocket"] = None
+
+async def unicast(xmlReceived):
+    xml_string = ET.tostring(xmlReceived, encoding='utf-8', method='xml').decode('utf-8')
+    addressee = xmlReceived.find("addressee").text
+
+    # Llamar al servicio Pyro4 con la cadena XML
+    response = chat_services.otherMessage(xml_string)
+
+    client = clients.get(addressee)
+    if client and client["websocket"] is not None:
+        try:
+            await client["websocket"].send(response)
+        except websockets.ConnectionClosed:
+            client["status"] = "Inactivo"
+            client["websocket"] = None
+
 # -----------------------------------------------------------------------------------------
 
 async def handler(websocket):
@@ -153,8 +198,12 @@ async def handler(websocket):
                     response = await register(xml, websocket)
                 elif case == "logout":
                     response = await logout(xml)
-                elif case == "global-chat":
-                    await globalChat(xml)
+                elif case == "broadcast":
+                    await broadcast(xml)
+                elif case == "multicast":
+                    await multicast(xml)
+                elif case == "unicast":
+                    await unicast(xml)
                 else:
                     response = '<response><case>error</case><message>Caso no reconocido</message></response>'
 
