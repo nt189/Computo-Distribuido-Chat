@@ -62,5 +62,21 @@ function updateDisconnectedUsers(users) {
     });
 }
 
-// Exportar las funciones
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.querySelector('#search-container input');
+    searchInput.addEventListener('input', function () {
+        const filter = this.value.toLowerCase();
+
+        document.querySelectorAll('#onlineUsers .connected-user').forEach(user => {
+            const name = user.querySelector('.chat-name').textContent.toLowerCase();
+            user.style.display = name.includes(filter) ? '' : 'none';
+        });
+
+        document.querySelectorAll('#offLineUsers .connected-user').forEach(user => {
+            const name = user.querySelector('.chat-name').textContent.toLowerCase();
+            user.style.display = name.includes(filter) ? '' : 'none';
+        });
+    });
+});
+
 export { updateConnectedUsers, updateDisconnectedUsers };

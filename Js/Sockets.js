@@ -35,8 +35,9 @@ function initializeWebSocket() {
                             <username>${username.trim()}</username>
                         </message>`;
                     webSocket.send(messageXML);
-                    document.getElementById('whoami').innerHTML = user.username;
-                } else {
+                    document.getElementById('whoami').innerHTML = username;
+                } 
+                else {
                     alert('El nombre de usuario no puede estar vacío');
                     username = null;
                 }
@@ -58,6 +59,21 @@ function attemptReconnect() {
         }, 5000); // Espera 5 segundos antes de intentar reconectar
     } else {
         console.error('Se alcanzó el número máximo de intentos de reconexión.');
+    }
+}
+
+function updateUserPreview(chatnameOrName, lastMessage, lastTime) {
+    // Busca por userid (data-chatname)
+    let userDiv = document.querySelector(`.connected-user[data-chatname="${chatnameOrName}"]`);
+    // Si no lo encuentra, busca por username (data-name)
+    if (!userDiv) {
+        userDiv = document.querySelector(`.connected-user[data-name="${chatnameOrName}"]`);
+    }
+    if (userDiv) {
+        const messageSpan = userDiv.querySelector('.chat-message');
+        const timeSpan = userDiv.querySelector('.chat-time');
+        if (messageSpan) messageSpan.textContent = lastMessage;
+        if (timeSpan) timeSpan.textContent = lastTime;
     }
 }
 
@@ -96,15 +112,24 @@ webSocket.onmessage = function (event) {
             break;
 
         case 'message':
-            let messagehtml;
-
-            messagehtml = xmlDoc.getElementsByTagName("htmlmessage")[0];
+            let messagehtml = xmlDoc.getElementsByTagName("htmlmessage")[0];
             if (messagehtml) {
                 document.getElementById('messages-content').innerHTML += messagehtml.textContent;
-                localStorage.setItem('globalChatHistory', document.getElementById('messages-content').innerHTML);
-            }
+                localStorage.setItem('ChatHistory', document.getElementById('messages-content').innerHTML);
 
-            break;
+                // Scroll automático al último mensaje
+                const messagesContent = document.getElementById('messages-content');
+                messagesContent.scrollTop = messagesContent.scrollHeight;
+
+                // Actualiza el preview del usuario
+                const senderElem = xmlDoc.getElementsByTagName("sender")[0];
+                const textElem = xmlDoc.getElementsByTagName("textmessage")[0];
+                const timeElem = xmlDoc.getElementsByTagName("time")[0];
+                if (senderElem && textElem && timeElem) {
+                    updateUserPreview(senderElem.textContent, textElem.textContent, timeElem.textContent);
+                }
+            }
+        break;
 
         case 'error':
             handleError(xmlDoc);
@@ -209,7 +234,9 @@ function sendMessage() {
                     <textmessage>${message}</textmessage>
                     <time>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time>
                 </message>`;
-        } else if (selectedUsers.length === 1) {
+            console.log(messageXML)
+        } 
+        else if (selectedUsers.length === 1) {
             // Unicast
             messageXML = `
                 <message>
@@ -219,19 +246,38 @@ function sendMessage() {
                     <textmessage>${message}</textmessage>
                     <time>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time>
                 </message>`;
-        } else {
+
+            let template = `
+                <div class="message-container my-messages">
+                    <div class="sender-name">
+                        <span class="method-tag">[unicast] para ${selectedUsers[0].querySelector('.chat-name').textContent}</span>
+                    </div>
+                    <div class="message-content">
+                        <span>${message}</span>
+                        <span class="message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                </div>
+            `;
+            document.getElementById('messages-content').innerHTML += template;
+            localStorage.setItem('ChatHistory', document.getElementById('messages-content').innerHTML);
+        } 
+        else {
             // Multicast
+            const addresseeNames = selectedUsers
+                .map(u => u.querySelector('.chat-name').textContent)
+                .join(', ');
+
             messageXML = `
                 <message>
                     <case>multicast</case>
                     <sender>${user.username}</sender>
                     <addressee>${selectedUsers.map(u => u.dataset.chatname).join(',')}</addressee>
+                    <addresseeName>${addresseeNames}</addresseeName>
                     <textmessage>${message}</textmessage>
                     <time>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time>
                 </message>`;
         }
         webSocket.send(messageXML);
-        console.log(messageXML)
         messageInput.value = '';
 
         // Deseleccionar usuarios después de enviar
@@ -272,10 +318,10 @@ window.addEventListener('beforeunload', function () {
     }
 });
 
-function globalchatload() {
-    const globalChatHistory = localStorage.getItem('globalChatHistory');
-    if (globalChatHistory) {
-        document.getElementById('messages-content').innerHTML = globalChatHistory;
+function Chatload() {
+    const ChatHistory = localStorage.getItem('ChatHistory');
+    if (ChatHistory) {
+        document.getElementById('messages-content').innerHTML = ChatHistory;
     }
 };
-globalchatload()
+Chatload()
