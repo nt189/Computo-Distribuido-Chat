@@ -40,7 +40,7 @@ def save_clients():
     serializable_clients = {
         user_id: {
             "username": data["username"],
-            "status": "Inactivo"
+            "status": "Inactivo" #No guardamos en handler por que no es serializable
         } for user_id, data in clients.items()
     }
 
@@ -119,8 +119,8 @@ def logout(xmlRecived, handler, server):
     if userid in clients.keys():
         clients[userid]["status"] = "Inactivo"
         clients[userid]["handler"] = None
-        save_clients()
-        broadcastUserList(server)
+        save_clients() # Guarda el estado actualizado   
+        broadcastUserList(server) # Notificar a los demás clientes
 
     return '<response><case>logout</case><status>ok</status></response>'
 
@@ -160,6 +160,16 @@ def multicast(xmlReceived, handler, server):
             except Exception:
                 client["status"] = "Inactivo"
                 client["handler"] = None
+    
+    if sender not in addressees:
+        for c in clients.values():
+            if c["username"] == sender and c["handler"] is not None:
+                try:
+                    server.send_message(c["handler"], response1)
+                except Exception:
+                    c["status"] = "Inactivo"
+                    c["handler"] = None
+                break
 
 def unicast(xmlReceived, handler, server):
     xml_string = ET.tostring(xmlReceived, encoding='utf-8', method='xml').decode('utf-8')
