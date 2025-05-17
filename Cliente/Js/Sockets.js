@@ -6,7 +6,7 @@ let selectedUsers = [];
 
 // Cuando el WebSocket se abre 
 function initializeWebSocket() {
-    webSocket = new WebSocket('ws://192.168.149.24:8888'); 
+    webSocket = new WebSocket('ws://192.168.1.68:8888'); 
 
     webSocket.onopen = function (event) {
         console.log('WebSocket conectado');
