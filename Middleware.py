@@ -209,11 +209,6 @@ def client_left(client, server):
             broadcastUserList(server)
             break
 
-async def main():
-    async with websockets.serve(handler, "192.168.149.24", 8888, ping_timeout=20):
-        print("Servidor WebSocket iniciado en ws://192.168.149.24:8888")
-        await asyncio.Future()
-
 if __name__ == "__main__":
     load_clients()
     server = WebsocketServer(host='192.168.1.68', port=8888)
