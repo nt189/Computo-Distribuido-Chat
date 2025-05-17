@@ -1,5 +1,4 @@
-import asyncio
-import websockets
+from websocket_server import WebsocketServer
 from xml.etree import ElementTree as ET
 import Pyro4
 import json
@@ -12,10 +11,10 @@ if chat_services.conection():
 else:
     print("No se pudo establecer una conexion con los objetos remotos")
 
-# Diccionario de clientes (userId: {username, status, websocket})
+# Diccionario de clientes (userId: {username, status, handler})
 clients = {}
 
-async def broadcastUserList():
+def broadcastUserList(server):
     response = '''
         <response>
             <case>updateUsers</case>
@@ -30,19 +29,18 @@ async def broadcastUserList():
     )
 
     for client in clients.values():
-        if client["websocket"] is not None:
+        if client["handler"] is not None:
             try:
-                await client["websocket"].send(response)
-            except websockets.ConnectionClosed:
+                server.send_message(client["handler"], response)
+            except Exception:
                 client["status"] = "Inactivo"
-                client["websocket"] = None
+                client["handler"] = None
 
 def save_clients():
     serializable_clients = {
         user_id: {
             "username": data["username"],
             "status": "Inactivo"
-            # No guardamos el websocket porque no es serializable
         } for user_id, data in clients.items()
     }
 
@@ -60,26 +58,24 @@ def load_clients():
                 clients[user_id] = {
                     "username": info["username"],
                     "status": info["status"],
-                    "websocket": None  # Se actualizará cuando el usuario se conecte
+                    "handler": None  # Se actualizará cuando el usuario se conecte
                 }
     except FileNotFoundError:
         print("Archivo clients.json no encontrado, se iniciará una lista vacía.")
     except json.JSONDecodeError:
         print("El archivo clients.json no contiene datos válidos, se iniciará una lista vacía.")
 
-# ---------------------------- Funciones -------------------------------
-
-async def login(xmlRecived, websocket):
+def login(xmlRecived, handler, server):
     userid = xmlRecived.find("userid").text
     username = xmlRecived.find("username").text
 
     if userid in clients:
         clients[userid]["status"] = "Activo"
-        clients[userid]["websocket"] = websocket
+        clients[userid]["handler"] = handler
     else:
         username = "desconocido"
 
-    await broadcastUserList()
+    broadcastUserList(server)
 
     return f'''
         <response>
@@ -90,7 +86,7 @@ async def login(xmlRecived, websocket):
         </response>
     '''
 
-async def register(xmlRecived, websocket):
+def register(xmlRecived, handler, server):
     username = xmlRecived.find("username").text
     user_id = 'user' + str(len(clients))
 
@@ -98,11 +94,11 @@ async def register(xmlRecived, websocket):
         clients[user_id] = {
             "username": username,
             "status": "Activo",
-            "websocket": websocket
+            "handler": handler
         }
         save_clients()
 
-    await broadcastUserList()
+    broadcastUserList(server)
 
     return f'''
         <response>
@@ -113,7 +109,7 @@ async def register(xmlRecived, websocket):
         </response>
     '''
 
-async def logout(xmlRecived):
+def logout(xmlRecived, handler, server):
     user_id_element = xmlRecived.find("userId")
     if user_id_element is None:
         print("Error: No se encontró el elemento <userId> en el XML recibido.")
@@ -122,112 +118,106 @@ async def logout(xmlRecived):
     userid = user_id_element.text
     if userid in clients.keys():
         clients[userid]["status"] = "Inactivo"
-        clients[userid]["websocket"] = None
-        save_clients()  # Guarda el estado actualizado
-        await broadcastUserList()  # Notificar a los demás clientes
+        clients[userid]["handler"] = None
+        save_clients()
+        broadcastUserList(server)
 
     return '<response><case>logout</case><status>ok</status></response>'
 
-async def broadcast(xmlReceived):  # broadcast
+def broadcast(xmlReceived, handler, server):
     xml_string = ET.tostring(xmlReceived, encoding='utf-8', method='xml').decode('utf-8')
-    
-    # Llamar al servicio Pyro4 con la cadena XML
     response = chat_services.otherMessage(xml_string)
     response1 = chat_services.myMessage(xml_string)
+    sender = xmlReceived.find("sender").text
 
     for client in clients.values():
-        if client["websocket"] is not None:  
+        if client["handler"] is not None:
             try:
-                if client['username'] != xmlReceived.find("sender").text:
-                    await client["websocket"].send(response)
+                if client['username'] != sender:
+                    server.send_message(client["handler"], response)
                 else:
-                    await client["websocket"].send(response1)
-            except websockets.ConnectionClosed:
+                    server.send_message(client["handler"], response1)
+            except Exception:
                 client["status"] = "Inactivo"
-                client["websocket"] = None
+                client["handler"] = None
 
-async def multicast(xmlReceived):
+def multicast(xmlReceived, handler, server):
     xml_string = ET.tostring(xmlReceived, encoding='utf-8', method='xml').decode('utf-8')
     addressees = xmlReceived.find("addressee").text
-    addressees = [a.strip() for a in addressees.split(',') if a.strip()]  # Limpia espacios y vacíos
-
-    # Llamar al servicio Pyro4 con la cadena XML
+    addressees = [a.strip() for a in addressees.split(',') if a.strip()]
     response = chat_services.otherMessage(xml_string)
     response1 = chat_services.myMessage(xml_string)
     sender = xmlReceived.find("sender").text
 
     for user_id in addressees:
         client = clients.get(user_id)
-        if client and client["websocket"] is not None:
+        if client and client["handler"] is not None:
             try:
                 if client['username'] != sender:
-                    await client["websocket"].send(response)
+                    server.send_message(client["handler"], response)
                 else:
-                    await client["websocket"].send(response1)
-            except websockets.ConnectionClosed:
+                    server.send_message(client["handler"], response1)
+            except Exception:
                 client["status"] = "Inactivo"
-                client["websocket"] = None
+                client["handler"] = None
 
-async def unicast(xmlReceived):
+def unicast(xmlReceived, handler, server):
     xml_string = ET.tostring(xmlReceived, encoding='utf-8', method='xml').decode('utf-8')
     addressee = xmlReceived.find("addressee").text
-
-    # Llamar al servicio Pyro4 con la cadena XML
     response = chat_services.otherMessage(xml_string)
-
     client = clients.get(addressee)
-    if client and client["websocket"] is not None:
+    if client and client["handler"] is not None:
         try:
-            await client["websocket"].send(response)
-        except websockets.ConnectionClosed:
+            server.send_message(client["handler"], response)
+        except Exception:
             client["status"] = "Inactivo"
-            client["websocket"] = None
+            client["handler"] = None
 
-# -----------------------------------------------------------------------------------------
-
-async def handler(websocket):
+def message_received(client, server, message):
     try:
-        async for message in websocket:
-            try:
-                xml = ET.fromstring(message)
-                case = xml.find("case").text
+        xml = ET.fromstring(message)
+        case = xml.find("case").text
 
-                if case == "login":
-                    response = await login(xml, websocket)
-                elif case == "register":
-                    response = await register(xml, websocket)
-                elif case == "logout":
-                    response = await logout(xml)
-                elif case == "broadcast":
-                    await broadcast(xml)
-                elif case == "multicast":
-                    await multicast(xml)
-                elif case == "unicast":
-                    await unicast(xml)
-                else:
-                    response = '<response><case>error</case><message>Caso no reconocido</message></response>'
+        if case == "login":
+            response = login(xml, client, server)
+            server.send_message(client, response)
+        elif case == "register":
+            response = register(xml, client, server)
+            server.send_message(client, response)
+        elif case == "logout":
+            response = logout(xml, client, server)
+            server.send_message(client, response)
+        elif case == "broadcast":
+            broadcast(xml, client, server)
+        elif case == "multicast":
+            multicast(xml, client, server)
+        elif case == "unicast":
+            unicast(xml, client, server)
+        else:
+            response = '<response><case>error</case><message>Caso no reconocido</message></response>'
+            server.send_message(client, response)
+    except ET.ParseError:
+        error = '<response><case>error</case><message>XML inválido</message></response>'
+        server.send_message(client, error)
 
-                await websocket.send(response)
-
-            except ET.ParseError:
-                error = '<response><case>error</case><message>XML inválido</message></response>'
-                await websocket.send(error)
-                
-    except websockets.ConnectionClosed:
-        # Manejar la desconexión del cliente
-        for user_id, client in clients.items():
-            if client["websocket"] == websocket:
-                print(f"Cliente {client['username']} desconectado")
-                client["status"] = "Inactivo"
-                client["websocket"] = None
-                await broadcastUserList()  # Notificar a los demás clientes
-                break
+def client_left(client, server):
+    for user_id, c in clients.items():
+        if c["handler"] == client:
+            print(f"Cliente {c['username']} desconectado")
+            c["status"] = "Inactivo"
+            c["handler"] = None
+            broadcastUserList(server)
+            break
 
 async def main():
-    async with websockets.serve(handler, "192.168.1.68", 8888, ping_timeout=20):
-        print("Servidor WebSocket iniciado en ws://192.168.1.68:8888")
+    async with websockets.serve(handler, "192.168.149.24", 8888, ping_timeout=20):
+        print("Servidor WebSocket iniciado en ws://192.168.149.24:8888")
         await asyncio.Future()
 
 if __name__ == "__main__":
     load_clients()
-    asyncio.run(main())
+    server = WebsocketServer(host='192.168.1.68', port=8888)
+    server.set_fn_message_received(message_received)
+    server.set_fn_client_left(client_left)
+    print("Servidor WebSocket sincrónico iniciado en ws://192.168.1.68:8888")
+    server.run_forever()
